@@ -9,7 +9,7 @@ originally wrote bme280_sample.py)
 import argparse
 from collections import namedtuple
 
-from . import bme280_i2c
+import bme280_i2c
 
 setup_run = False
 

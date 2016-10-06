@@ -4,6 +4,7 @@ from datetime import datetime
 from random import random
 import requests
 import sys
+from Adafruit_BME280 import BME280
 
 ##################### Constants ############################
 # These will change for each hardware setup
@@ -14,6 +15,14 @@ THINGSPEAKKEY = '483ZMRMW59WGBBL0'
 UBIDOTSTOKEN  = '5pGTL4RDWCTAGToq8izKe5gp7oVQrU'
 UBIDOTSURL = 'https://things.ubidots.com/api/v1.6/devices/denweather/'
 ############################################################
+
+# call the sensor to read the specific data
+def readBME280( sensor ):
+    degrees = round(sensor.read_temperature(), 2)
+    kpascals = round(sensor.read_pressure()/1000, 2)
+    humidity = round(sensor.read_humidity(), 2)
+
+    return [ degrees, kpascals, humidity ]
 
 # function to simulate call to data source
 def simBME280Read():
@@ -97,15 +106,17 @@ def writeData(fileName, date, data):
 def main():
     try:
         while True:
+            sensor = BME280(mode=4)
             currentDate = datetime.now()
             # wait for the desired clock time to act
             if currentDate.second == 0:
                 if currentDate.minute%15 == 0:
                     # Read the data from the sensors
-                    currentData = simBME280Read()
+                    #currentData = simBME280Read()
+                    currentData = readBME280(sensor)
                     # save data on the screen by adding a new line to the overwrite
-                    print( "\rRecorded "
-                           + currentDate.strftime("%Y-%m-%d, %H:%M:%S") + " "
+                    print( "\rRecord  "
+                           + currentDate.strftime("%Y-%m-%d %H:%M:%S") + " "
                            + str(currentData)
                            + "         ",
                            end=' \n', flush=True)
@@ -119,7 +130,7 @@ def main():
                 pass
             # Print date to screen, and update 
             print( "\rWaiting "
-                   + currentDate.strftime("%Y-%m-%d, %H:%M:%S") + " ",
+                   + currentDate.strftime("%Y-%m-%d %H:%M:%S") + " ",
                    end=' ', flush=True)
             #Sleep a full second sleep(1)
             sleep(1)
