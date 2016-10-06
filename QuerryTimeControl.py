@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 from time import sleep
 from datetime import datetime
 from random import random
@@ -16,127 +16,139 @@ UBIDOTSTOKEN  = '5pGTL4RDWCTAGToq8izKe5gp7oVQrU'
 UBIDOTSURL = 'https://things.ubidots.com/api/v1.6/devices/denweather/'
 ############################################################
 
-# call the sensor to read the specific data
-def readBME280( sensor ):
+
+def read_bme280(sensor):
+    """Query the BME280 sensor and return [temp C, pres. kPa, hum. %]"""
     degrees = round(sensor.read_temperature(), 2)
-    kpascals = round(sensor.read_pressure()/1000, 2)
+    kpascals = round(sensor.read_pressure()/1000, 3)
     humidity = round(sensor.read_humidity(), 2)
 
-    return [ degrees, kpascals, humidity ]
+    return [degrees, kpascals, humidity]
 
-# function to simulate call to data source
-def simBME280Read():
-    try:
-        data = [ 20.0, 101.0, 50.0 ]
-        data = [ round(value+(5-10*random()),2) for value in data]
-        #print(data, flush=True)
-        return data
-    except KeyboardInterrupt:
-        print("Thanks for monitoring the weather."
-              + "A keyboard interrupt closed the data read function.")
-        raise KeyboardInterrupt
-    finally:
-        #clean up the GPIO
-        #print("The GPIO has been closed.")
-        pass
 
-def tranUbidots(url, token, data):
-    # use your API and data to establish the parameter list.
+def sim_bme280_read():
+    """Simulate the output of read_bme280(sensor) with changing data"""
+    data = [20.0, 101.0, 50.0 ]
+    data = [round(value+(5-10*random()),2) for value in data]
+    return data
+
+
+def tran_ubidots(url, token, data):
+    """Transmit data to Ubidots using requests.post"""
+    # format the total url.
     posturl = url + "?token=" + token
-    # may want to update data field to be a dictionary with the correct elements.
+    # TODO(Lance): update for generic data payload length.
     payload = {"temperature": data[0], "pressure": data[1], "humidity": data[2]}
-    # Define the connection setup.
+    # Transmit data, allow other actions even if this one has a common error.
     try:
         req = requests.post( posturl, payload)
-    except KeyboardInterrupt:
-        raise KeyboardInterrupt
-    except:
-        print("Could not transmit event {}.".format( event))
-        print(sys.exc_info()[0])
+    except requests.exceptions.HTTPError as error:
+        print(error)
+    except requests.exceptions.ConnectionError as error:
+        print(error)
+    except requests.exceptions.Timeout as error:
+        print(error)
+    except requests.exceptions.TooManyRedirects as error:
+        print(error)
+    except requests.exceptions.RequestException as error:
+        # Catastrophic error. bail
+        print(error)
+        raise e
     else:
         pass
     finally:
         pass
         
-def tranThingSpeak(url, key, data):
-    # use your API and data to establish the parameter list.
+
+def tran_thing_speak(url, key, data):
+    """Transmit data to ThingSpeak using requset.post"""
+    # Build the TingSpeak payload 
     payload = {'api_key': key,}
-    # add field# dictionary entry for any data upto 8 (thingspeak channel limit)
     for index, value in enumerate(data[:8], start=1):
         payload['field{}'.format(index)]='{:.2f}'.format(value)
-    # Define the connection setup.
+    # Transmit data, allow other actions even if this one has a common error.
     try:
         req = requests.post( url, params=payload)
-    except KeyboardInterrupt:
-        raise KeyboardInterrupt
-    except:
-        print("Could not transmit event {}.".format( event))
-        print(sys.exc_info()[0])
+    except requests.exceptions.HTTPError as error:
+        print(error)
+    except requests.exceptions.ConnectionError as error:
+        print(error)
+    except requests.exceptions.Timeout as error:
+        print(error)
+    except requests.exceptions.TooManyRedirects as error:
+        print(error)
+    except requests.exceptions.RequestException as error:
+        # Catastrophic error. bail
+        print(error)
+        raise e
     else:
         pass
     finally:
         pass
         
-def writeData(fileName, date, data):
-    # Open a file new or existing ready to write at the end of the file.
-    with open(fileName, mode='a', encoding='utf-8') as dataFile:
-        #check for new file and write the header if needed
-        if( dataFile.tell() < 2 ):
-            dataFile.write( "Initiated "
-                            + date.strftime("%Y-%m-%d, %H:%M:%S") + ", "
-                            + "\n")
-            dataFile.write("Date Y-M-D, Time H:M:S, "
-                            + "Temp C, "
-                            + "Pres. kPa, "
-                            + "Humidity % "
-                            + "\n")
-        # write the event number and date.time to the line.
-        dataFile.write( date.strftime("%Y-%m-%d")   + ", "
-                        + date.strftime("%H:%M:%S") + ", ")
-        # Add each data element with , delimination
-        for value in data:      
-            dataFile.write("{:.2f} , ".format(value) )
-        # end the line after all the data
-        dataFile.write( "\n" )  
-    #file closes as we finish the loop.
 
-##This program checks the clock time every second and if the modulo time is whole
-##then it will read the data.  If the minute module is a whole number it will
-##record the data to the screen, a file, and to one or more IoT repositories.
-def main():
+def write_data(name, date, data):
+    """Write CSV data to new or existing file, allow other process if file write failes."""
     try:
+        with open(name, mode='a', encoding='utf-8') as data_file:
+            #Write a header label if this is a new file.
+            if(data_file.tell() < 2 ):
+                data_file.write("Initiated "
+                                + date.strftime("%Y-%m-%d, %H:%M:%S") + ", "
+                                + "\n")
+                data_file.write("Date Y-M-D, Time H:M:S, "
+                                + "Temp C, "
+                                + "Pres. kPa, "
+                                + "Humidity % "
+                                + "\n")
+            # write date, time, then each data item to the line.
+            data_file.write(date.strftime("%Y-%m-%d")   + ", "
+                            + date.strftime("%H:%M:%S") + ", ")
+            for value in data:      
+                data_file.write("{:.2f} , ".format(value) )
+            data_file.write("\n")  
+        #file closes as we finish the loop.
+    except (IOError, OSError) as error:
+        print(error)
+    else:
+        pass
+    finally:
+        pass
+
+
+def main():
+    """This program reads from a Bosch BME280 sensor over i2c and then
+       sends the results to the screen, a file, ubidots, and thingspeak
+       Using datetime.now() to trigger activity on whole minute or hours
+       while displaying a running clock updated on the second."""
+    try:
+        sensor = BME280(mode=4)
         while True:
-            sensor = BME280(mode=4)
-            currentDate = datetime.now()
-            # wait for the desired clock time to act
-            if currentDate.second == 0:
-                if currentDate.minute%15 == 0:
-                    # Read the data from the sensors
-                    #currentData = simBME280Read()
-                    currentData = readBME280(sensor)
-                    # save data on the screen by adding a new line to the overwrite
+            current_date = datetime.now()
+            # On each whole minute check if it should read and record the data
+            if current_date.second == 0:
+                if current_date.minute%15 == 0:
+                    current_data = read_bme280(sensor)
+                    # record the data on the screen, file and websites
                     print( "\rRecord  "
-                           + currentDate.strftime("%Y-%m-%d %H:%M:%S") + " "
-                           + str(currentData)
+                           + current_date.strftime("%Y-%m-%d %H:%M:%S") + " "
+                           + str(current_data)
                            + "         ",
                            end=' \n', flush=True)
-                    # Write Data to local file
-                    writeData(DATAFILENAME, currentDate, currentData)
-                    # Send data to IoT repository for storage.
-                    tranThingSpeak(THINGSPEAKURL, THINGSPEAKKEY, currentData)
-                    tranUbidots(UBIDOTSURL, UBIDOTSTOKEN, currentData)
-
+                    write_data(DATAFILENAME, current_date, current_data)
+                    tran_thing_speak(THINGSPEAKURL, THINGSPEAKKEY, current_data)
+                    tran_ubidots(UBIDOTSURL, UBIDOTSTOKEN, current_data)
             else:
                 pass
-            # Print date to screen, and update 
+            # Update the current datetime line each second 
             print( "\rWaiting "
-                   + currentDate.strftime("%Y-%m-%d %H:%M:%S") + " ",
+                   + current_date.strftime("%Y-%m-%d %H:%M:%S") + " ",
                    end=' ', flush=True)
-            #Sleep a full second sleep(1)
-            sleep(1)
+            sleep(0.5)
     except KeyboardInterrupt:
-        print("Thanks for monitoring the weather."
-              + "A keyboard interrupt closed the program.")
+        print("\nThanks for monitoring the weather."
+              + "A keyboard interrupt closed the program.",
+              end='\n', flush=True)
     finally:
         pass
 
