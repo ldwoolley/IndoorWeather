@@ -9,15 +9,17 @@ from Adafruit_BME280 import BME280
  
 ##################### Constants ############################
 # These will change for each hardware setup
-BME280ADDRESS = ''
-DATAFILENAME  = 'exampleData.csv'
-THINGSPEAKURL = 'https://api.thingspeak.com/update'
-THINGSPEAKKEY = '483ZMRMW59WGBBL0'
+BME280_I2CADDR = 0x76
+BME280_OSAMPLE_8 = 4
+DATAFILENAME  = 'data-denWeather.csv'
+LOGFILENAME = 'log-denWeather.log'
 UBIDOTSTOKEN  = '5pGTL4RDWCTAGToq8izKe5gp7oVQrU'
 UBIDOTSURL = 'https://things.ubidots.com/api/v1.6/devices/denweather/'
+THINGSPEAKURL = 'https://api.thingspeak.com/update'
+THINGSPEAKKEY = '483ZMRMW59WGBBL0'
 ############################################################
 
-logging.basicConfig(level=logging.INFO, filename='log-denWeather.log',
+logging.basicConfig(level=logging.INFO, filename=LOGFILENAME,
                     format='%(asctime)s, %(levelname)s, '
                            '%(module)s, %(message)s')
 
@@ -129,7 +131,7 @@ def main():
        while displaying a running clock updated on the second."""
     logging.info('Starting the program')
     try:
-        sensor = BME280(mode=4)
+        sensor = BME280(mode=BME280_OSAMPLE_8, address=BME280_I2CADDR)
         while True:
             current_date = datetime.now()
             # On each whole minute check if it should read and record the data
