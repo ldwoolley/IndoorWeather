@@ -11,8 +11,8 @@ from Adafruit_BME280 import BME280
 # These will change for each hardware setup
 BME280_I2CADDR = 0x76
 BME280_OSAMPLE_8 = 4
-DATAFILENAME  = 'data-denWeather.csv'
-LOGFILENAME = 'log-denWeather.log'
+DATAFILENAME  = '/home/pi/IndoorWeather/data-denWeather.csv'
+LOGFILENAME = '/home/pi/IndoorWeather/log-denWeather.log'
 UBIDOTSTOKEN  = '5pGTL4RDWCTAGToq8izKe5gp7oVQrU'
 UBIDOTSURL = 'https://things.ubidots.com/api/v1.6/devices/denweather/'
 THINGSPEAKURL = 'https://api.thingspeak.com/update'
@@ -156,7 +156,7 @@ def main():
     except KeyboardInterrupt:
         logging.exception('The KeyboardInterrupt will stop the program')
     finally:
-        logging.info('Enging the program')
+        logging.info('Ending the program')
 
 if __name__ == '__main__':
     main()
