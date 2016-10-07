@@ -139,19 +139,19 @@ def main():
                 if current_date.minute%10 == 0:
                     current_data = read_bme280(sensor)
                     # record the data on the screen, file and websites
-                    print( "\rRecord  "
-                           + current_date.strftime("%Y-%m-%d %H:%M:%S") + " "
-                           + str(current_data)
-                           + "         ",
-                           end=' \n', flush=True)
+                    #print( "\rRecord  "
+                    #       + current_date.strftime("%Y-%m-%d %H:%M:%S") + " "
+                    #       + str(current_data)
+                    #       + "         ",
+                    #       end=' \n', flush=True)
                     write_data(DATAFILENAME, current_date, current_data)
                     tran_thing_speak(THINGSPEAKURL, THINGSPEAKKEY, current_data)
                     tran_ubidots(UBIDOTSURL, UBIDOTSTOKEN, current_data)
                     logging.info('Collected/Saved {}'.format(current_data))
             # Update the current datetime line each second 
-            print( "\rWaiting "
-                   + current_date.strftime("%Y-%m-%d %H:%M:%S") + " ",
-                   end=' ', flush=True)
+            #print( "\rWaiting "
+            #       + current_date.strftime("%Y-%m-%d %H:%M:%S") + " ",
+            #       end=' ', flush=True)
             sleep(0.5)
     except KeyboardInterrupt:
         logging.exception('The KeyboardInterrupt will stop the program')
