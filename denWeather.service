@@ -1,0 +1,17 @@
+[Unit]
+Description=Run denWeather.py
+After=multi-user.target
+
+[Service]
+TimeoutSec=10
+Type=idle
+PIDFile=/var/run/denWeather.pid
+# Note: -f so that the rm doesn't fail if the file does not exist.
+ExecStartPre=/bin/rm -f /var/run/denWeather.pid
+ExecReload=/bin/rm -f /var/run/denWeather.pid
+ExecStart=/usr/bin/python3 /home/pi/IndoorWeather/denWeather.py > /home/pi/IndoorWeather/script-weather.script 2>&1
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
